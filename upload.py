@@ -12,9 +12,9 @@ from tqdm.utils import CallbackIOWrapper
 start_time = time.time()
 
 
-API_KEY = "Here is your API key"
-submit_url = "https://api.phishfeed.com/KIT/v1/submit/"
-search_url = "https://api.phishfeed.com/KIT/v1/search/"
+API_KEY = "YOUR API HERE"
+submit_url = "https://b672r6l7ch.execute-api.us-east-1.amazonaws.com/submission"
+search_url = "https://b672r6l7ch.execute-api.us-east-1.amazonaws.com/search"
 
 
 def check_duplicate(zipfile):
@@ -54,20 +54,20 @@ def submit(zipfile):
     if res.status_code == 200:
         presigned_headers = {'Content-Type': 'application/binary'}
         presigned_url = res.json()['upload_url']
-        f = open(zipfile, 'rb')
-
-        try:
-            with tqdm(total=file_size, unit="B", unit_scale=True, unit_divisor=1024) as t:
-                wrapped_file = CallbackIOWrapper(t.update, f, "read")
-                upload = requests.put(
-                    presigned_url, headers=presigned_headers, data=wrapped_file)
-                if upload.status_code != 200:
-                    print("Upload Failed!")
-
-        except:
-            print("Upload Failed!")
-
-        f.close()
+        with open(zipfile, 'rb') as f:
+            try:
+                with tqdm(total=file_size, unit="B", unit_scale=True, unit_divisor=1024) as t:
+                    wrapped_file = CallbackIOWrapper(t.update, f, "read")
+                    upload = requests.put(
+                        presigned_url, headers=presigned_headers, data=wrapped_file)
+                    if upload.status_code == 200:
+                        return True
+                    if upload.status_code != 200:
+                        print("Upload Failed!")
+            except Exception as e:
+                print("Upload Failed!")
+                print(e)
+    return False
 
 
 base_dir = pathlib.Path().resolve()
@@ -80,8 +80,18 @@ for file in files:
 
     duplicate = check_duplicate(file_path)
     if not duplicate:
-        print("The file is not a duplicate. Starting upload %s to S3...", file_path)
-        submit(file_path)
+        print("The file is not a duplicate. Starting upload %s to S3...",
+              file_path)
+        counter = 0
+        while True:
+            success = submit(file_path)
+            if success:
+                break
+            if counter > 10:
+                print("We tried to upload this file 10 times and failed!",
+                      file_path)
+                break
+            counter = counter + 1
     else:
         print("The file is a duplicate. It was not uploaded!")
 
