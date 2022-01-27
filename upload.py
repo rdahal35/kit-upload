@@ -1,5 +1,7 @@
 import requests
 import os
+import shutil
+import pathlib
 import json
 import glob
 import hashlib
@@ -68,7 +70,10 @@ def submit(zipfile):
         f.close()
 
 
-files = glob.glob("./zipFiles/*")
+base_dir = pathlib.Path().resolve()
+kit_files = os.path.join(base_dir, "zipFiles")
+files = glob.glob(os.path.join(kit_files, "*"))
+uploaded_folder = os.path.join(base_dir, "uploadedKits")
 
 for file in files:
     file_path = os.path.abspath(file)
@@ -79,6 +84,8 @@ for file in files:
         submit(file_path)
     else:
         print("The file is a duplicate. It was not uploaded!")
+
+    shutil.move(file, uploaded_folder)
 
 
 print("--- %s seconds ---" % (time.time() - start_time))
