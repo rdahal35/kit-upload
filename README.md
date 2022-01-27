@@ -14,4 +14,4 @@ python upload.py
 python upload.py
 ```
 
-4. After upload, the files are moved to `uploadedKits` directory
+5. After upload, the files are moved to `uploadedKits` directory
