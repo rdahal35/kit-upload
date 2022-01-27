@@ -9,4 +9,9 @@ python upload.py
 
 3. Place kit files in zipFiles directory.
 
+4. Run the following command
+```bash
+python upload.py
+```
+
 4. After upload, the files are moved to `uploadedKits` directory
